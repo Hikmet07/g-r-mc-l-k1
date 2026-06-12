@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskFlow — Proje Yönetim Panosu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d12;
+  --bg-grain:#0e1117;
+  --surface:#13161d;
+  --surface-2:#181c25;
+  --surface-3:#1e232e;
+  --line:#252b38;
+  --line-soft:#1c212b;
+  --text:#e8eaf0;
+  --text-2:#9aa3b5;
+  --text-3:#5f6878;
+  --accent:#7c6cff;
+  --accent-2:#a594ff;
+  --accent-glow:rgba(124,108,255,.35);
+  --todo:#6b7689;
+  --prog:#3d9bff;
+  --done:#3fcf8e;
+  --high:#ff6b6b;
+  --mid:#ffb443;
+  --low:#3fcf8e;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:22px;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(900px 500px at 12% -5%, rgba(124,108,255,.12), transparent 60%),
+    radial-gradient(800px 600px at 95% 8%, rgba(61,155,255,.08), transparent 55%),
+    radial-gradient(700px 500px at 50% 110%, rgba(63,207,142,.05), transparent 60%);
+}
+.wrap{position:relative;z-index:1;max-width:1340px;margin:0 auto;padding:28px 32px 80px}
+
+/* ---------- Header ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{
+  width:46px;height:46px;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),#5847e0);
+  display:grid;place-items:center;
+  box-shadow:0 8px 28px -6px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.25);
+  flex-shrink:0;
+}
+.logo svg{width:24px;height:24px}
+.brand h1{font-family:'Sora';font-size:21px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+.brand .ver{font-family:'JetBrains Mono';font-size:11px;color:var(--accent-2);background:rgba(124,108,255,.12);border:1px solid rgba(124,108,255,.25);padding:2px 7px;border-radius:6px;font-weight:500}
+.brand p{font-size:12.5px;color:var(--text-3);margin-top:3px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.pill{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);background:var(--surface);border:1px solid var(--line);padding:7px 12px;border-radius:999px;font-weight:450}
+.pill .led{width:7px;height:7px;border-radius:50%;background:var(--done);box-shadow:0 0 8px var(--done);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn{
+  font-family:'Inter';font-size:13px;font-weight:500;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 16px;border-radius:10px;border:1px solid transparent;
+  transition:.18s var(--ease);user-select:none;
+}
+.btn svg{width:16px;height:16px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#5847e0);color:#fff;box-shadow:0 6px 20px -6px var(--accent-glow)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 28px -6px var(--accent-glow)}
+.btn-primary:active{transform:translateY(0)}
+.btn-ghost{background:var(--surface);border-color:var(--line);color:var(--text-2)}
+.btn-ghost:hover{background:var(--surface-2);color:var(--text);border-color:var(--line)}
+
+/* ---------- Stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+.stat{
+  background:linear-gradient(160deg,var(--surface),var(--surface-2));
+  border:1px solid var(--line-soft);border-radius:var(--r-lg);
+  padding:18px 18px;position:relative;overflow:hidden;
+  transition:.25s var(--ease);
+}
+.stat:hover{border-color:var(--line);transform:translateY(-2px)}
+.stat .ico{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;opacity:.9}
+.stat .ico svg{width:18px;height:18px}
+.stat .lab{font-size:11.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;font-weight:500}
+.stat .val{font-family:'Sora';font-size:34px;font-weight:600;letter-spacing:-.02em;margin-top:8px;line-height:1}
+.stat .sub{font-size:11.5px;color:var(--text-3);margin-top:6px;display:flex;align-items:center;gap:5px}
+.stat .barmini{height:3px;border-radius:2px;background:var(--line);margin-top:12px;overflow:hidden}
+.stat .barmini i{display:block;height:100%;border-radius:2px;transition:width .6s var(--ease)}
+
+/* ---------- Tabs ---------- */
+.tabbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line-soft);padding:4px;border-radius:12px}
+.tab{
+  font-size:13px;font-weight:500;color:var(--text-3);cursor:pointer;
+  padding:8px 16px;border-radius:8px;border:none;background:none;
+  display:flex;align-items:center;gap:7px;transition:.18s var(--ease);
+}
+.tab svg{width:15px;height:15px}
+.tab:hover{color:var(--text-2)}
+.tab.active{background:var(--surface-3);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.search{position:relative}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text-3)}
+.search input{
+  font-family:'Inter';font-size:13px;color:var(--text);
+  background:var(--surface);border:1px solid var(--line-soft);
+  padding:9px 14px 9px 34px;border-radius:10px;width:230px;outline:none;transition:.18s var(--ease);
+}
+.search input::placeholder{color:var(--text-3)}
+.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+
+/* ---------- Views ---------- */
+.view{display:none;animation:fade .35s var(--ease)}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ---------- Kanban ---------- */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:start}
+.col{
+  background:linear-gradient(180deg,var(--surface),rgba(19,22,29,.6));
+  border:1px solid var(--line-soft);border-radius:var(--r-xl);
+  padding:16px;transition:.2s var(--ease);min-height:200px;
+}
+.col.drag-over{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow), inset 0 0 40px rgba(124,108,255,.06)}
+.col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 4px}
+.col-head .t{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2)}
+.col-head .dot{width:9px;height:9px;border-radius:50%}
+.col-head .cnt{font-family:'JetBrains Mono';font-size:12px;color:var(--text-3);background:var(--surface-3);min-width:24px;text-align:center;padding:2px 8px;border-radius:8px}
+.cards{display:flex;flex-direction:column;gap:11px;min-height:60px}
+.card{
+  background:linear-gradient(165deg,var(--surface-2),var(--surface));
+  border:1px solid var(--line);border-radius:var(--r-md);
+  padding:15px;cursor:grab;position:relative;overflow:hidden;
+  transition:.2s var(--ease);
+  animation:cardIn .4s var(--ease) both;
+}
+@keyframes cardIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.card.pr-high::before{background:var(--high)}
+.card.pr-mid::before{background:var(--mid)}
+.card.pr-low::before{background:var(--low)}
+.card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 12px 30px -12px rgba(0,0,0,.6)}
+.card.dragging{opacity:.4;cursor:grabbing;transform:rotate(2deg) scale(1.02)}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.card h3{font-size:14.5px;font-weight:600;line-height:1.35;letter-spacing:-.01em}
+.card-menu{color:var(--text-3);cursor:pointer;flex-shrink:0;opacity:0;transition:.18s}
+.card:hover .card-menu{opacity:1}
+.card-menu:hover{color:var(--text)}
+.card p{font-size:12.5px;color:var(--text-2);line-height:1.55;margin-bottom:13px}
+.tags{display:flex;gap:6px;margin-bottom:13px;flex-wrap:wrap}
+.tag{font-family:'JetBrains Mono';font-size:10.5px;font-weight:500;padding:3px 8px;border-radius:6px}
+.tag-mod{background:rgba(124,108,255,.12);color:var(--accent-2);border:1px solid rgba(124,108,255,.2)}
+.tag-pr{display:flex;align-items:center;gap:4px}
+.tag-pr.high{background:rgba(255,107,107,.12);color:var(--high);border:1px solid rgba(255,107,107,.22)}
+.tag-pr.mid{background:rgba(255,180,67,.12);color:var(--mid);border:1px solid rgba(255,180,67,.22)}
+.tag-pr.low{background:rgba(63,207,142,.12);color:var(--low);border:1px solid rgba(63,207,142,.22)}
+.card-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line-soft);padding-top:11px}
+.assignee{display:flex;align-items:center;gap:8px}
+.avatar{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;color:#fff;font-family:'Sora'}
+.assignee span{font-size:12px;color:var(--text-2)}
+.card-id{font-family:'JetBrains Mono';font-size:11px;color:var(--text-3)}
+.empty-col{text-align:center;padding:24px 0;color:var(--text-3);font-size:12.5px;border:1.5px dashed var(--line);border-radius:12px}
+
+/* ---------- List ---------- */
+.tablewrap{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;padding:14px 18px;border-bottom:1px solid var(--line)}
+td{padding:14px 18px;border-bottom:1px solid var(--line-soft);font-size:13.5px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.row{transition:.15s}
+tr.row:hover{background:var(--surface-2)}
+.td-title{font-weight:500}
+.td-mod{font-size:11px;color:var(--text-3);font-family:'JetBrains Mono';margin-top:2px}
+.chip{font-size:11.5px;font-weight:500;padding:4px 10px;border-radius:7px;display:inline-flex;align-items:center;gap:6px}
+.chip .d{width:6px;height:6px;border-radius:50%}
+.chip.todo{background:rgba(107,118,137,.14);color:#9aa3b5}
+.chip.prog{background:rgba(61,155,255,.14);color:var(--prog)}
+.chip.done{background:rgba(63,207,142,.14);color:var(--done)}
+.mini-btn{font-size:11.5px;font-weight:500;padding:5px 11px;border-radius:7px;border:1px solid var(--line);background:var(--surface-2);color:var(--text-2);cursor:pointer;transition:.15s}
+.mini-btn:hover{background:var(--surface-3);color:var(--text);border-color:var(--accent)}
+
+/* ---------- Team ---------- */
+.team{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.member{background:linear-gradient(160deg,var(--surface),var(--surface-2));border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:22px;transition:.22s var(--ease)}
+.member:hover{transform:translateY(-3px);border-color:var(--line)}
+.member-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.member .avatar{width:48px;height:48px;font-size:17px}
+.member-head .nm{font-family:'Sora';font-size:16px;font-weight:600}
+.member-head .rl{font-size:12px;color:var(--text-3);margin-top:2px}
+.member-stats{display:flex;gap:10px;margin-bottom:16px}
+.mstat{flex:1;background:var(--surface-3);border-radius:10px;padding:10px;text-align:center}
+.mstat .n{font-family:'Sora';font-size:20px;font-weight:600}
+.mstat .l{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+.member-tasks{display:flex;flex-direction:column;gap:7px}
+.mt{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text-2)}
+.mt .d{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ---------- Progress ---------- */
+.prog-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+.panel{background:linear-gradient(160deg,var(--surface),var(--surface-2));border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:24px}
+.panel h3{font-family:'Sora';font-size:15px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:9px}
+.panel h3 svg{width:17px;height:17px;color:var(--accent-2)}
+.prow{margin-bottom:18px}
+.prow:last-child{margin-bottom:0}
+.plab{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:8px}
+.plab .nm{color:var(--text);font-weight:500}
+.plab .vl{color:var(--text-3);font-family:'JetBrains Mono'}
+.pbar{height:8px;background:var(--surface-3);border-radius:5px;overflow:hidden}
+.pfill{height:100%;border-radius:5px;width:0;transition:width 1s var(--ease);background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.timeline{position:relative}
+.tl-item{display:flex;gap:16px;padding-bottom:24px;position:relative}
+.tl-item:last-child{padding-bottom:0}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:9px;top:24px;bottom:0;width:2px;background:var(--line)}
+.tl-dot{width:20px;height:20px;border-radius:50%;border:3px solid var(--line);background:var(--surface);flex-shrink:0;z-index:1;display:grid;place-items:center}
+.tl-dot.done{border-color:var(--done);background:var(--done)}
+.tl-dot.done svg{width:10px;height:10px;color:#0b0d12}
+.tl-dot.active{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-glow)}
+.tl-body .tl-title{font-size:13.5px;font-weight:500}
+.tl-body .tl-meta{font-size:11.5px;color:var(--text-3);margin-top:3px;font-family:'JetBrains Mono'}
+
+/* ---------- Modal ---------- */
+.overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(5,6,9,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;animation:fade .25s}
+.overlay.open{display:flex}
+.modal{background:linear-gradient(170deg,var(--surface-2),var(--surface));border:1px solid var(--line);border-radius:var(--r-xl);padding:28px;width:430px;max-width:92vw;box-shadow:0 30px 80px -20px rgba(0,0,0,.7);animation:modalIn .3s var(--ease)}
+@keyframes modalIn{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal h3{font-family:'Sora';font-size:18px;font-weight:600;margin-bottom:22px;display:flex;align-items:center;gap:10px}
+.modal h3 svg{width:20px;height:20px;color:var(--accent-2)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;color:var(--text-2);margin-bottom:7px;font-weight:500}
+.field input,.field select,.field textarea{
+  width:100%;font-family:'Inter';font-size:13.5px;color:var(--text);
+  background:var(--surface-3);border:1px solid var(--line);border-radius:10px;
+  padding:11px 13px;outline:none;transition:.18s;
+}
+.field textarea{min-height:80px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--surface-3)}
+
+@media(max-width:980px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .board,.team{grid-template-columns:1fr}
+  .prog-grid{grid-template-columns:1fr}
+  .wrap{padding:20px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      </div>
+      <div>
+        <h1>TaskFlow <span class="ver">v2.0</span></h1>
+        <p>Python / Flask geliştirme süreci proje yönetim panosu</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="pill"><span class="led"></span> SQLite aktif</span>
+      <button class="btn btn-ghost" onclick="resetData()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        Sıfırla
+      </button>
+      <button class="btn btn-primary" onclick="openModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Yeni görev
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" id="stats"></div>
+
+  <!-- Tabs + Search -->
+  <div class="tabbar">
+    <div class="tabs">
+      <button class="tab active" data-tab="kanban" onclick="switchTab('kanban',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="11" rx="1"/></svg>Kanban</button>
+      <button class="tab" data-tab="list" onclick="switchTab('list',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Liste</button>
+      <button class="tab" data-tab="team" onclick="switchTab('team',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Ekip</button>
+      <button class="tab" data-tab="progress" onclick="switchTab('progress',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>İlerleme</button>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search" placeholder="Görev ara..." oninput="render()">
+    </div>
+  </div>
+
+  <!-- Kanban view -->
+  <div id="view-kanban" class="view active">
+    <div class="board" id="board"></div>
+  </div>
+
+  <!-- List view -->
+  <div id="view-list" class="view">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Görev</th><th>Durum</th><th>Öncelik</th><th>Atanan</th><th>İşlem</th></tr></thead>
+        <tbody id="list-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Team view -->
+  <div id="view-team" class="view"><div class="team" id="team"></div></div>
+
+  <!-- Progress view -->
+  <div id="view-progress" class="view">
+    <div class="prog-grid">
+      <div class="panel">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Modül tamamlanma oranı</h3>
+        <div id="prog-bars"></div>
+      </div>
+      <div class="panel">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Proje zaman çizelgesi</h3>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Yeni görev ekle</h3>
+    <div class="field">
+      <label>Görev başlığı</label>
+      <input type="text" id="f-title" placeholder="Örn: API endpoint testleri">
+    </div>
+    <div class="field">
+      <label>Açıklama</label>
+      <textarea id="f-desc" placeholder="Kısa açıklama..."></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Atanan kişi</label>
+        <select id="f-user">
+          <option value="Ahmet">Ahmet — DB Admin</option>
+          <option value="Çağrı">Çağrı — Backend Dev</option>
+          <option value="Elif">Elif — Frontend Dev</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Öncelik</label>
+        <select id="f-priority"><option value="high">Yüksek</option><option value="mid" selected>Orta</option><option value="low">Düşük</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Modül</label>
+      <select id="f-module"><option>Veritabanı</option><option>Backend</option><option>Frontend</option><option>Test</option><option>Dağıtım</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">İptal</button>
+      <button class="btn btn-primary" onclick="addTask()">Görevi ekle</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MEMBERS = {
+  'Ahmet': { role:'DB Admin', color:'#7c6cff', init:'AH' },
+  'Çağrı': { role:'Backend Dev', color:'#3d9bff', init:'ÇA' },
+  'Elif':  { role:'Frontend Dev', color:'#3fcf8e', init:'EL' },
+};
+const MODULES = ['Veritabanı','Backend','Frontend','Test','Dağıtım'];
+const COLS = [
+  { key:'Todo', label:'Bekleyenler', color:'#6b7689' },
+  { key:'InProgress', label:'Yapılıyor', color:'#3d9bff' },
+  { key:'Done', label:'Tamamlandı', color:'#3fcf8e' },
+];
+const SEED = [
+  { id:1, title:'SQLite Veritabanı Kurulumu', desc:'SQLAlchemy ORM modellerinin tasarlanması ve migration yapısı.', status:'Done', user:'Ahmet', priority:'high', module:'Veritabanı' },
+  { id:2, title:'Flask Route Tasarımları', desc:'CRUD rotaları ve durum değiştirme fonksiyonları.', status:'InProgress', user:'Çağrı', priority:'high', module:'Backend' },
+  { id:3, title:'Jinja2 Template Entegrasyonu', desc:'HTML ve arayüzün template motoruyla kodlanması.', status:'Todo', user:'Elif', priority:'mid', module:'Frontend' },
+  { id:4, title:'Kullanıcı Kimlik Doğrulama', desc:'Flask-Login ile oturum ve yetki yönetimi.', status:'Todo', user:'Çağrı', priority:'high', module:'Backend' },
+  { id:5, title:'REST API Endpointleri', desc:'JSON formatında görev ve kullanıcı API\'leri.', status:'InProgress', user:'Çağrı', priority:'mid', module:'Backend' },
+  { id:6, title:'Responsive Kanban Arayüzü', desc:'Mobil uyumlu sürükle-bırak kanban panosu.', status:'InProgress', user:'Elif', priority:'mid', module:'Frontend' },
+  { id:7, title:'Birim Testleri', desc:'pytest ile model ve rota testlerinin yazılması.', status:'Todo', user:'Ahmet', priority:'low', module:'Test' },
+  { id:8, title:'Veritabanı Seeding', desc:'Başlangıç mock verilerinin yüklenmesi.', status:'Done', user:'Ahmet', priority:'low', module:'Veritabanı' },
+];
+
+let tasks = load();
+let nextId = Math.max(0, ...tasks.map(t=>t.id)) + 1;
+
+function load(){ try{ const s=localStorage.getItem('taskflow'); return s?JSON.parse(s):JSON.parse(JSON.stringify(SEED)); }catch(e){ return JSON.parse(JSON.stringify(SEED)); } }
+function save(){ try{ localStorage.setItem('taskflow', JSON.stringify(tasks)); }catch(e){} }
+function resetData(){ if(confirm('Tüm görevler başlangıç haline sıfırlansın mı?')){ tasks=JSON.parse(JSON.stringify(SEED)); nextId=9; save(); render(); } }
+
+const esc = s => (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PL = {high:'Yüksek',mid:'Orta',low:'Düşük'};
+const SL = {Todo:'Bekliyor',InProgress:'Yapılıyor',Done:'Bitti'};
+const SC = {Todo:'todo',InProgress:'prog',Done:'done'};
+const filtered = () => { const q=(document.getElementById('search')?.value||'').toLowerCase().trim(); return q? tasks.filter(t=>t.title.toLowerCase().includes(q)||t.desc.toLowerCase().includes(q)||t.user.toLowerCase().includes(q)) : tasks; };
+
+function statHTML(lab,val,sub,color,pct,icon){
+  return `<div class="stat">
+    <div class="ico" style="background:${color}1f">${icon}</div>
+    <div class="lab">${lab}</div>
+    <div class="val" style="color:${color}">${val}</div>
+    <div class="sub">${sub}</div>
+    <div class="barmini"><i style="width:${pct}%;background:${color}"></i></div>
+  </div>`;
+}
+function renderStats(){
+  const tot=tasks.length, td=tasks.filter(t=>t.status==='Todo').length, ip=tasks.filter(t=>t.status==='InProgress').length, dn=tasks.filter(t=>t.status==='Done').length;
+  const ic = p=>`<svg viewBox="0 0 24 24" fill="none" stroke="${p}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">`;
+  document.getElementById('stats').innerHTML =
+    statHTML('Toplam görev', tot, 'tüm görevler', '#a594ff', 100, ic('#a594ff')+'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>') +
+    statHTML('Bekleyenler', td, 'başlanmadı', '#9aa3b5', tot?Math.round(td/tot*100):0, ic('#9aa3b5')+'<circle cx="12" cy="12" r="9"/><path d="M12 7v5"/></svg>') +
+    statHTML('Yapılıyor', ip, 'devam ediyor', '#3d9bff', tot?Math.round(ip/tot*100):0, ic('#3d9bff')+'<path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg>') +
+    statHTML('Tamamlandı', dn, `%${tot?Math.round(dn/tot*100):0} bitti`, '#3fcf8e', tot?Math.round(dn/tot*100):0, ic('#3fcf8e')+'<path d="M20 6L9 17l-5-5"/></svg>');
+}
+
+function renderKanban(){
+  const board=document.getElementById('board'); board.innerHTML='';
+  const list=filtered();
+  COLS.forEach(col=>{
+    const ct=list.filter(t=>t.status===col.key);
+    const colEl=document.createElement('div');
+    colEl.className='col'; colEl.dataset.status=col.key;
+    colEl.innerHTML=`<div class="col-head">
+      <span class="t"><span class="dot" style="background:${col.color};box-shadow:0 0 8px ${col.color}"></span>${col.label}</span>
+      <span class="cnt">${ct.length}</span></div>
+      <div class="cards"></div>`;
+    const cards=colEl.querySelector('.cards');
+    if(!ct.length){ cards.innerHTML='<div class="empty-col">Görev yok</div>'; }
+    ct.forEach(t=>{
+      const m=MEMBERS[t.user]||{color:'#6b7689',init:'?'};
+      const c=document.createElement('div');
+      c.className=`card pr-${t.priority}`; c.draggable=true; c.dataset.id=t.id;
+      c.innerHTML=`
+        <div class="card-top">
+          <h3>${esc(t.title)}</h3>
+          <span class="card-menu" onclick="event.stopPropagation();cycleStatus(${t.id})" title="Durumu ilerlet">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </div>
+        <p>${esc(t.desc)}</p>
+        <div class="tags">
+          <span class="tag tag-mod">${esc(t.module)}</span>
+          <span class="tag tag-pr ${t.priority}"><span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block"></span>${PL[t.priority]}</span>
+        </div>
+        <div class="card-foot">
+          <div class="assignee"><div class="avatar" style="background:${m.color}">${m.init}</div><span>${esc(t.user)}</span></div>
+          <span class="card-id">#${t.id}</span>
+        </div>`;
+      c.addEventListener('dragstart',e=>{ c.classList.add('dragging'); e.dataTransfer.setData('id',t.id); });
+      c.addEventListener('dragend',()=>c.classList.remove('dragging'));
+      cards.appendChild(c);
+    });
+    colEl.addEventListener('dragover',e=>{ e.preventDefault(); colEl.classList.add('drag-over'); });
+    colEl.addEventListener('dragleave',()=>colEl.classList.remove('drag-over'));
+    colEl.addEventListener('drop',e=>{ e.preventDefault(); colEl.classList.remove('drag-over'); const id=+e.dataTransfer.getData('id'); moveTask(id,col.key); });
+    board.appendChild(colEl);
+  });
+}
+
+function renderList(){
+  const body=document.getElementById('list-body');
+  const list=filtered();
+  body.innerHTML=list.map(t=>{
+    const m=MEMBERS[t.user]||{color:'#6b7689',init:'?'};
+    return `<tr class="row">
+      <td><div class="td-title">${esc(t.title)}</div><div class="td-mod">${esc(t.module)} · #${t.id}</div></td>
+      <td><span class="chip ${SC[t.status]}"><span class="d" style="background:currentColor"></span>${SL[t.status]}</span></td>
+      <td><span class="tag tag-pr ${t.priority}"><span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block"></span>${PL[t.priority]}</span></td>
+      <td><div class="assignee"><div class="avatar" style="width:24px;height:24px;font-size:10px;background:${m.color}">${m.init}</div><span>${esc(t.user)}</span></div></td>
+      <td>${t.status!=='Done'?`<button class="mini-btn" onclick="cycleStatus(${t.id})">${t.status==='Todo'?'Başlat':'Tamamla'}</button>`:'<span style="color:var(--done);font-size:12px">✓ Tamamlandı</span>'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:30px">Sonuç bulunamadı</td></tr>';
+}
+
+function renderTeam(){
+  const grid=document.getElementById('team');
+  grid.innerHTML=Object.entries(MEMBERS).map(([name,m])=>{
+    const mt=tasks.filter(t=>t.user===name);
+    const done=mt.filter(t=>t.status==='Done').length;
+    const prog=mt.filter(t=>t.status==='InProgress').length;
+    return `<div class="member">
+      <div class="member-head"><div class="avatar" style="background:${m.color}">${m.init}</div>
+        <div><div class="nm">${name}</div><div class="rl">${m.role}</div></div></div>
+      <div class="member-stats">
+        <div class="mstat"><div class="n">${mt.length}</div><div class="l">Görev</div></div>
+        <div class="mstat"><div class="n" style="color:var(--prog)">${prog}</div><div class="l">Aktif</div></div>
+        <div class="mstat"><div class="n" style="color:var(--done)">${done}</div><div class="l">Bitti</div></div>
+      </div>
+      <div class="member-tasks">${mt.map(t=>`<div class="mt"><span class="d" style="background:${COLS.find(c=>c.key===t.status).color}"></span>${esc(t.title)}</div>`).join('')||'<div class="mt" style="color:var(--text-3)">Atanmış görev yok</div>'}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderProgress(){
+  const bars=document.getElementById('prog-bars');
+  bars.innerHTML=MODULES.map(mod=>{
+    const mt=tasks.filter(t=>t.module===mod);
+    if(!mt.length) return '';
+    const done=mt.filter(t=>t.status==='Done').length;
+    const pct=Math.round(done/mt.length*100);
+    return `<div class="prow"><div class="plab"><span class="nm">${mod}</span><span class="vl">${done}/${mt.length} · %${pct}</span></div>
+      <div class="pbar"><div class="pfill" data-pct="${pct}"></div></div></div>`;
+  }).join('');
+  requestAnimationFrame(()=>{ setTimeout(()=>{ bars.querySelectorAll('.pfill').forEach(f=>f.style.width=f.dataset.pct+'%'); },50); });
+
+  const done = mod => { const mt=tasks.filter(t=>t.module===mod); return mt.length && mt.every(t=>t.status==='Done'); };
+  const milestones=[
+    {t:'Proje başlangıcı',m:'Hafta 1',s:'done'},
+    {t:'Veritabanı katmanı',m:'Hafta 2',s:done('Veritabanı')?'done':'active'},
+    {t:'Backend & API',m:'Hafta 3',s:done('Backend')?'done':(done('Veritabanı')?'active':'')},
+    {t:'Frontend arayüzü',m:'Hafta 4',s:done('Frontend')?'done':''},
+    {t:'Test & dağıtım',m:'Hafta 5',s:done('Test')&&done('Dağıtım')?'done':''},
+  ];
+  const check='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  document.getElementById('timeline').innerHTML=milestones.map(ms=>`
+    <div class="tl-item"><div class="tl-dot ${ms.s}">${ms.s==='done'?check:''}</div>
+      <div class="tl-body"><div class="tl-title">${ms.t}</div><div class="tl-meta">${ms.m}</div></div></div>`).join('');
+}
+
+function render(){ renderStats(); renderKanban(); renderList(); renderTeam(); renderProgress(); save(); }
+
+function moveTask(id,status){ const t=tasks.find(t=>t.id===id); if(t&&t.status!==status){ t.status=status; render(); } }
+function cycleStatus(id){ const t=tasks.find(t=>t.id===id); if(!t) return; const order=['Todo','InProgress','Done']; const i=order.indexOf(t.status); t.status=order[Math.min(i+1,2)]; render(); }
+
+function switchTab(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='progress') renderProgress();
+}
+
+function openModal(){ document.getElementById('overlay').classList.add('open'); document.getElementById('f-title').focus(); }
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); ['f-title','f-desc'].forEach(i=>document.getElementById(i).value=''); }
+function addTask(){
+  const title=document.getElementById('f-title').value.trim();
+  if(!title){ document.getElementById('f-title').style.borderColor='var(--high)'; return; }
+  tasks.push({ id:nextId++, title, desc:document.getElementById('f-desc').value.trim()||'Açıklama eklenmedi.', status:'Todo', user:document.getElementById('f-user').value, priority:document.getElementById('f-priority').value, module:document.getElementById('f-module').value });
+  closeModal(); render();
+}
+document.getElementById('overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); if(e.key==='n'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){ e.preventDefault(); openModal(); } });
+
+render();
+</script>
+</body>
+</html>
